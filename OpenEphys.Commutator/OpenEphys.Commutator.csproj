@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Title>OpenEphys.Commutator</Title>
+    <Description>Bonsai library containing interfaces for control of Open Ephys commutators.</Description>
+    <PackageTags>Bonsai Rx Open Ephys Commutator</PackageTags>
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Bonsai.Core" Version="2.8.5" />
+    <PackageReference Include="Bonsai.System" Version="2.8.1" />
+  </ItemGroup>
+
+</Project>
