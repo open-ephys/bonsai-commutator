@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="**/*.bonsai" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Bonsai.Core" Version="2.8.5" />
     <PackageReference Include="Bonsai.System" Version="2.8.1" />
   </ItemGroup>
