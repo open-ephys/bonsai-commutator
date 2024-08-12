@@ -8,25 +8,30 @@ using Bonsai;
 namespace OpenEphys.Commutator
 {
     /// <summary>
-    /// Calculates a feedback control signal to compensate for twisting about the specified axis,
-    /// in units of turns.
+    /// Calculates a the rotation about a specified axis (the "twist") that has occurred between successive 3D 
+    /// rotation measurements.
     /// </summary>
     [Description("Calculates a feedback control signal to compensate for twisting about the specified axis, in units of turns.")]
-    public class QuaternionTwistController : Combinator<Quaternion, double>
+    public class QuaternionToTwist : Combinator<Quaternion, double>
     {
         /// <summary>
-        /// Gets or sets the direction vector specifying the axis around which to calculate the twist feedback.
+        /// Gets or sets the direction vector specifying the axis around which to calculate the twist.
         /// </summary>
+        /// <remarks>
+        /// This vector should point, using the reference frame of the device producing rotation measurements, 
+        /// in the direction that the tether exits the headstage. Note that negating this vector will result in
+        /// negating the direction of twisting.
+        /// </remarks>
         [TypeConverter(typeof(NumericRecordConverter))]
-        [Description("The direction vector specifying the axis around which to calculate the twist feedback.")]
+        [Description("The direction vector specifying the axis around which to calculate the twist.")]
         public Vector3 RotationAxis { get; set; } = Vector3.UnitZ;
 
         /// <summary>
-        /// Calculates a feedback control signal from an observable sequence of rotation measurements
-        /// to compensate for twisting about the specified axis.
+        /// Calculates a twist about <see cref="RotationAxis"/> that has occurred between successive rotation 
+        /// measurements provided by the input sequence.
         /// </summary>
         /// <param name="source">The sequence of rotation measurements.</param>
-        /// <returns>The sequence of controller feedback values, in units of turns.</returns>
+        /// <returns>The sequence of twist values, in units of turns.</returns>
         public override IObservable<double> Process(IObservable<Quaternion> source)
         {
             return Observable.Defer(() =>
