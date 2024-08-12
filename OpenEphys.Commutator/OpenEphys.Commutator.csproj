@@ -5,11 +5,17 @@
     <Description>Bonsai library containing interfaces for control of Open Ephys commutators.</Description>
     <PackageTags>Bonsai Rx Open Ephys Commutator</PackageTags>
     <TargetFramework>net472</TargetFramework>
+
+    <!-- Embed untracked sources in the PDB when building from CI -->
+    <EmbedUntrackedSources>false</EmbedUntrackedSources>
+    <EmbedUntrackedSources Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</EmbedUntrackedSources>
+    
   </PropertyGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="**/*.bonsai" />
   </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="Bonsai.Core" Version="2.8.5" />
