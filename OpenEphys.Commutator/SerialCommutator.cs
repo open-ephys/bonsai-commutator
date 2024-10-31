@@ -8,14 +8,12 @@ using Bonsai;
 namespace OpenEphys.Commutator
 {
     /// <summary>
-    /// Represents an operator controls an Open Ephys commutator by writing a JSON-encoded
-    /// representations of each element of the input sequence to a serial port and produces the
-    /// JSON-encoded command string.
+    /// An operator that controls an Open Ephys commutator by writing a JSON-encoded motion command for each
+    /// element of the input sequence to the commutator and produces the JSON command sequence.
     /// </summary>
     [Description("Controls an Open Ephys commutator using a serial port.")]
     public class SerialCommutator : Combinator<double, string>
     {
-
         const string ConfigurationCategory = "Configuration";
         const string AcquisitionCategory = "Acquisition";
 
@@ -61,11 +59,14 @@ namespace OpenEphys.Commutator
         }
 
         /// <summary>
-        /// Writes a JSON-encoded representations of each element of the input sequence, as well as
+        /// Writes a JSON-encoded turn command for each element of the input sequence, as well as
         /// configuration property values, to a serial port.
         /// </summary>
+        /// <remarks>
+        /// A turn command will not be produced for input values that are is NaN or infinity.
+        /// </remarks>
         /// <param name="source">A sequence of motor turn values in units of full rotations.</param>
-        /// <returns>JSON-encoded command string sent to the commutator.</returns>
+        /// <returns>A sequence of JSON-encoded commands sent to the commutator.</returns>
         public override IObservable<string> Process(IObservable<double> source)
         {
             return Observable.Using(
@@ -77,7 +78,7 @@ namespace OpenEphys.Commutator
                 },
                 s =>
                 {
-                    var turnCommands = source.Select(x => $"{{turn:{x}}}");
+                    var turnCommands = source.Where(x => !double.IsNaN(x) && !double.IsInfinity(x)).Select(x => $"{{turn:{x}}}");
                     var enabledCommands = enabled.Select(x => x ? "true" : "false").Select(x => $"{{enable:{x}}}");
                     var ledCommands = led.Select(x => x ? "true" : "false").Select(x => $"{{led:{x}}}");
                     return turnCommands
