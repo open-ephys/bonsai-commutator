@@ -14,8 +14,6 @@ namespace OpenEphys.Commutator
     [Description("Controls an Open Ephys commutator using a serial port.")]
     public class SerialCommutator : Combinator<double, string>
     {
-        const string ConfigurationCategory = "Configuration";
-        const string AcquisitionCategory = "Acquisition";
 
         readonly BehaviorSubject<bool> enabled = new(true);
         readonly BehaviorSubject<bool> led = new(true);
@@ -23,7 +21,7 @@ namespace OpenEphys.Commutator
         /// <summary>
         /// Gets or sets the name of the serial port.
         /// </summary>
-        [Category(ConfigurationCategory)]
+        [Category(Definitions.ConfigurationCategory)]
         [TypeConverter(typeof(PortNameConverter))]
         [Description("The name of the serial port.")]
         public string PortName { get; set; }
@@ -35,7 +33,7 @@ namespace OpenEphys.Commutator
         /// If true, the commutator will activate the motor and respond to turn commands. If false,
         /// the motor driver will be deactivated and motion commands will be ignored.
         /// </remarks>
-        [Category(AcquisitionCategory)]
+        [Category(Definitions.AcquisitionCategory)]
         [Description("If true, the commutator will be enabled. If false, it will disable the motor and ignore motion commands.")]
         public bool Enable
         {
@@ -50,7 +48,7 @@ namespace OpenEphys.Commutator
         /// If true, the commutator indication LED turn on. If false, the indication LED will turn
         /// off.
         /// </remarks>
-        [Category(AcquisitionCategory)]
+        [Category(Definitions.AcquisitionCategory)]
         [Description("If true, the commutator indication LED turn on. If false, the indication LED will turn off.")]
         public bool EnableLed
         {
