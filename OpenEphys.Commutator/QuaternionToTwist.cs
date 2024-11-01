@@ -40,7 +40,7 @@ namespace OpenEphys.Commutator
 
             return Observable.Defer(() =>
             {
-                double? previousTwist = default;
+                double? previousAngleAboutAxis = default;
                 return source.Select(rotation =>
                 {
                     // project rotation axis onto the direction axis
@@ -56,10 +56,10 @@ namespace OpenEphys.Commutator
 
                     // normalize twist feedback in units of turns
                     var angleAboutAxis = 2 * Math.Acos(rotationAboutAxis.W);
-                    var twist = previousTwist.HasValue
-                        ? (angleAboutAxis - previousTwist.GetValueOrDefault() + 3 * Math.PI) % (2 * Math.PI) - Math.PI
+                    var twist = previousAngleAboutAxis.HasValue
+                        ? (angleAboutAxis - previousAngleAboutAxis.GetValueOrDefault() + 3 * Math.PI) % (2 * Math.PI) - Math.PI
                         : 0;
-                    previousTwist = angleAboutAxis;
+                    previousAngleAboutAxis = angleAboutAxis;
                     return -twist / (2 * Math.PI);
                 });
             });
