@@ -11,7 +11,8 @@ namespace OpenEphys.Commutator
     /// Calculates a the rotation about a specified axis (the "twist") that has occurred between successive 3D 
     /// rotation measurements.
     /// </summary>
-    [Description("Calculates a feedback control signal to compensate for twisting about the specified axis, in units of turns.")]
+    [Description("Calculates a the rotation about a specified axis (the \"twist\") that has " +
+        "occurred between successive 3D rotation measurements.")]
     public class QuaternionToTwist : Combinator<Quaternion, double>
     {
         /// <summary>

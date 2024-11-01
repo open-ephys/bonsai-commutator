@@ -78,7 +78,7 @@ namespace OpenEphys.Commutator
                 },
                 s =>
                 {
-                    var turnCommands = source.Where(x => !double.IsNaN(x) && !double.IsInfinity(x)).Select(x => $"{{turn:{x}}}");
+                    var turnCommands = source.Where(x => !double.IsNaN(x) && !double.IsInfinity(x) && x != 0).Select(x => $"{{turn:{x}}}");
                     var enabledCommands = enabled.Select(x => x ? "true" : "false").Select(x => $"{{enable:{x}}}");
                     var ledCommands = led.Select(x => x ? "true" : "false").Select(x => $"{{led:{x}}}");
                     return turnCommands
