@@ -40,27 +40,36 @@ namespace OpenEphys.Commutator
 
             return Observable.Defer(() =>
             {
-                double? previousAngleAboutAxis = default;
+                Quaternion? previousQuaternion = null;
                 return source.Select(rotation =>
                 {
-                    // project rotation axis onto the direction axis
-                    var vectorPart = new Vector3(rotation.X, rotation.Y, rotation.Z);
-                    var dotProduct = Vector3.Dot(vectorPart, rotationAxis);
-                    var projection = dotProduct / Vector3.Dot(rotationAxis, rotationAxis) * rotationAxis;
-                    var rotationAboutAxis = new Quaternion(projection, rotation.W);
-                    rotationAboutAxis = Quaternion.Normalize(rotationAboutAxis);
-                    if (dotProduct < 0) // account for angle-axis flipping
+                    double twist = 0;
+                    if (rotation.Length() == 0) return 0;
+
+                    //Normalize the quaternion
+                    var current = Quaternion.Normalize(rotation);
+                    if (previousQuaternion.HasValue)
                     {
-                        rotationAboutAxis = -rotationAboutAxis;
+                        var last = previousQuaternion.Value;
+                        //Calculate the incremental rotation
+                        var conjugate = Quaternion.Conjugate(last);
+                        var delta =current * conjugate;
+
+                        //Rotate RotationAxis to the last known global coordinates
+                        var axis = new Quaternion(RotationAxis, 0);
+                        var projection = (last * axis) * conjugate;
+
+                        //Get how much the new rotation is performed through the last axis projected in global coordinates
+                        var deltaV = new Vector3(delta.X, delta.Y, delta.Z);
+                        var projectionV = new Vector3(projection.X, projection.Y, projection.Z);
+                        var dotProduct = Vector3.Dot(deltaV, projectionV);
+                        twist = 2 * Math.Atan2(dotProduct, delta.W);
                     }
 
-                    // normalize twist feedback in units of turns
-                    var angleAboutAxis = 2 * Math.Acos(rotationAboutAxis.W);
-                    var twist = previousAngleAboutAxis.HasValue
-                        ? (angleAboutAxis - previousAngleAboutAxis.GetValueOrDefault() + 3 * Math.PI) % (2 * Math.PI) - Math.PI
-                        : 0;
-                    previousAngleAboutAxis = angleAboutAxis;
-                    return -twist / (2 * Math.PI);
+                    previousQuaternion = current;
+
+
+                    return double.IsNaN(twist) ? 0 : -twist / (2 * Math.PI);
                 });
             });
         }
