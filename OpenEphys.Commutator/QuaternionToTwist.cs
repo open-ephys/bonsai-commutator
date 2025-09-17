@@ -16,7 +16,7 @@ namespace OpenEphys.Commutator
     public class QuaternionToTwist : Combinator<Quaternion, double>
     {
         /// <summary>
-        /// Gets or sets the direction vector specifying the axis around which to calculate the twist.
+        /// Gets or sets the direction vector specifying the axis relative to the headstage where the tether is connected.
         /// </summary>
         /// <remarks>
         /// This vector should point, using the reference frame of the device producing rotation measurements, 
@@ -25,19 +25,31 @@ namespace OpenEphys.Commutator
         /// </remarks>
         [Category(Definitions.ConfigurationCategory)]
         [TypeConverter(typeof(NumericRecordConverter))]
-        [Description("The direction vector specifying the axis around which to calculate the twist.")]
-        public Vector3 RotationAxis { get; set; } = Vector3.UnitZ;
+        [Description("The direction vector specifying the axis relative to the headstage where the tether is connected.")]
+        public Vector3 HeadstageAxis { get; set; } = Vector3.UnitZ;
+
 
         /// <summary>
-        /// Calculates a twist about <see cref="RotationAxis"/> that has occurred between successive rotation 
+        /// Gets or sets the direction vector speciying the axis representing the direction in which the tether is plugged into the commutator
+        /// </summary>
+        /// <remarks>
+        /// This vector should point, using the global reference frame, in the direction that the tether enters the rotating
+        /// element of the commutator. For a usual vertical, upright mouting, this would be Z. 
+        /// </remarks>
+        [Category(Definitions.ConfigurationCategory)]
+        [TypeConverter(typeof(NumericRecordConverter))]
+        [Description("The direction vector specifying the axis representing the direction in which the tether is plugged into the commutator.")]
+        public Vector3 CommutatorAxis { get; set; } = Vector3.UnitZ;
+
+        /// <summary>
+        /// Calculates a twist about <see cref="HeadstageAxis"/> 
+        /// and <see cref="CommutatorAxis"/>that has occurred between successive rotation 
         /// measurements provided by the input sequence.
         /// </summary>
         /// <param name="source">The sequence of rotation measurements.</param>
         /// <returns>The sequence of twist values, in units of turns.</returns>
         public override IObservable<double> Process(IObservable<Quaternion> source)
         {
-            var rotationAxis = RotationAxis;
-
             return Observable.Defer(() =>
             {
                 Quaternion? previousQuaternion = null;
@@ -53,17 +65,29 @@ namespace OpenEphys.Commutator
                         var last = previousQuaternion.Value;
                         //Calculate the incremental rotation
                         var conjugate = Quaternion.Conjugate(last);
-                        var delta =current * conjugate;
+                        var delta =Quaternion.Normalize(current * conjugate); //normalize to ensure there are no rounding errors
 
                         //Rotate RotationAxis to the last known global coordinates
-                        var axis = new Quaternion(RotationAxis, 0);
-                        var projection = (last * axis) * conjugate;
+                        var localAxis = new Quaternion(HeadstageAxis, 0);
+                        var projection = Quaternion.Normalize((last * localAxis) * conjugate);
 
                         //Get how much the new rotation is performed through the last axis projected in global coordinates
                         var deltaV = new Vector3(delta.X, delta.Y, delta.Z);
                         var projectionV = new Vector3(projection.X, projection.Y, projection.Z);
-                        var dotProduct = Vector3.Dot(deltaV, projectionV);
-                        twist = 2 * Math.Atan2(dotProduct, delta.W);
+                        var localDotProduct = Vector3.Dot(deltaV, projectionV);
+                        double localTwist = 2 * Math.Atan2(localDotProduct, delta.W);
+
+                        //Get how much of the new rotation is performed through the commutator axis in global coordinates
+                        var globalDotProduct = Vector3.Dot(deltaV, CommutatorAxis);
+                        var globalTwist = 2*Math.Atan2(globalDotProduct, delta.W);
+
+                        //get the cosine from the rotated axis and the commutator axis
+                        //since vectors are normalised, this is just the dot product
+                        var cos_angle = Vector3.Dot(projectionV,CommutatorAxis);
+
+                        //Remove the local twist from the global rotation to get a weighted total rotation
+                        twist = localTwist + (globalTwist - localTwist*cos_angle);
+
                     }
 
                     previousQuaternion = current;
