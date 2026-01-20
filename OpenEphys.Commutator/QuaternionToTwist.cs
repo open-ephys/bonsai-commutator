@@ -42,6 +42,32 @@ namespace OpenEphys.Commutator
         public Vector3 CommutatorAxis { get; set; } = Vector3.UnitZ;
 
         /// <summary>
+        /// Gets or sets the threshold in which the twist is not fully calculated and a fallback is used
+        /// </summary>
+        /// <remarks>
+        /// The twist algorithm has a pole when the cosine of the angle between the tether and commutator axes
+        /// approaches zero (i.e.: they are complete opposites). When this happens, a fallback needs to be used
+        /// </remarks>
+        [Category(Definitions.ConfigurationCategory)]
+        [Range(-0.9999,0.5)]
+        [Editor(DesignTypes.SliderEditor, DesignTypes.UITypeEditor)]
+        [Description("Threshold in which the twist is not fully calculated and a fallback is used.")]
+        public double FallbackThreshold { get; set; } = -0.9;
+
+        /// <summary>
+        /// Defines the possible fallback modes for when the algorithm reaches the pole
+        /// </summary>
+        public enum FallbackRotationModes { Global, Local}
+
+        /// <summary>
+        /// Gets of set the fallback rotation that should be used when the twist algorithm reaches
+        /// the threshold set on <see cref="FallbackThreshold"/>
+        /// </summary>
+        [Category(Definitions.ConfigurationCategory)]
+        [Description("Rotation to use when headstage angle reraches the fallback threshold")]
+        public FallbackRotationModes FallbackRotation { get; set; } = FallbackRotationModes.Global;
+
+        /// <summary>
         /// Calculates a twist about <see cref="HeadstageAxis"/> 
         /// and <see cref="CommutatorAxis"/>that has occurred between successive rotation 
         /// measurements provided by the input sequence.
@@ -85,8 +111,11 @@ namespace OpenEphys.Commutator
                         //since vectors are normalised, this is just the dot product
                         var cos_angle = Vector3.Dot(projectionV,CommutatorAxis);
 
-                        //Remove the local twist from the global rotation to get a weighted total rotation
-                        twist = localTwist + (globalTwist - localTwist*cos_angle);
+                        //Get total angle, correct for the mathematical pole
+                        if (cos_angle > FallbackThreshold)
+                            twist = (localTwist + globalTwist) / (1.0 + cos_angle);
+                        else
+                            twist = FallbackRotation == FallbackRotationModes.Global ? globalTwist : localTwist;
 
                     }
 
