@@ -55,9 +55,27 @@ namespace OpenEphys.Commutator
         public double FallbackThreshold { get; set; } = -0.9;
 
         /// <summary>
-        /// Defines the possible fallback modes for when the algorithm reaches the pole
+        /// Defines the possible fallback modes for when the algorithm reaches the 
+        /// mathematical pole defined un <see cref="FallbackThreshold"/>
         /// </summary>
-        public enum FallbackRotationModes { Global, Local}
+        public enum FallbackRotationModes { 
+            /// <summary>
+            /// Use the global coordinate axis as rotation origin
+            /// </summary>
+            /// <remarks>
+            /// Fallback mode on the pole will asume rotations are
+            /// orbital motions around the commutator
+            /// </remarks>
+            Global,
+            /// <summary>
+            /// Use the local coordinate axis as rotation origin
+            /// </summary>
+            /// <remarks>
+            /// Fallback mode on the pole will asume rotations are
+            /// rotations around the headstage tether axis
+            /// </remarks>
+            Local
+        }
 
         /// <summary>
         /// Gets of set the fallback rotation that should be used when the twist algorithm reaches
