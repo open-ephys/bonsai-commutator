@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO.Ports;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
@@ -76,7 +77,7 @@ namespace OpenEphys.Commutator
                 },
                 s =>
                 {
-                    var turnCommands = source.Where(x => !double.IsNaN(x) && !double.IsInfinity(x) && x != 0).Select(x => $"{{turn:{x}}}");
+                    var turnCommands = source.Where(x => !double.IsNaN(x) && !double.IsInfinity(x) && x != 0).Select(x => $"{{turn:{x.ToString(CultureInfo.InvariantCulture)}}}");
                     var enabledCommands = enabled.Select(x => x ? "true" : "false").Select(x => $"{{enable:{x}}}");
                     var ledCommands = led.Select(x => x ? "true" : "false").Select(x => $"{{led:{x}}}");
                     return turnCommands
